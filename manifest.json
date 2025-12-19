@@ -1,0 +1,22 @@
+{
+  "name": "Truck Checking App",
+  "short_name": "TruckApp",
+  "description": "App to record truck checks with compartment data and export to CSV",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#1e3c72",
+  "theme_color": "#1e3c72",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "truck-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "truck-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

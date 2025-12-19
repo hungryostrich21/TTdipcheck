@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Truck Checking App</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    max-width: 700px;
+    margin: auto;
+    background: linear-gradient(to bottom right, #1e3c72, #2a5298);
+    color: white;
+    font-weight: bold;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Background truck image */
+  body::before {
+    content: "";
+    background: url('truck.png') no-repeat center center;
+    background-size: contain;
+    opacity: 0.1; /* transparent */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+
+  h2, h3 {
+    text-align: center;
+    z-index: 1;
+    position: relative;
+  }
+
+  form, table, button {
+    z-index: 1;
+    position: relative;
+  }
+
+  input, select {
+    margin: 5px 0;
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-weight: bold;
+    color: #333;
+    box-sizing: border-box;
+  }
+
+  button {
+    padding: 10px 20px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  button:hover { background-color: #45a049; }
+
+  table {
+    margin-top: 20px;
+    border-collapse: collapse;
+    width: 100%;
+    border-radius: 5px;
+    overflow: hidden;
+    color: white;
+    display: none; /* initially hidden */
+  }
+
+  th, td {
+    border: 1px solid #fff;
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  th { background-color: rgba(0,0,0,0.6); }
+
+  tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.1); }
+  tr:nth-child(odd) { background-color: rgba(255, 255, 255, 0.05); }
+
+  .highlight-red { background-color: #f88; font-weight: bold; color: black; }
+
+  @media (max-width: 768px) {
+    body { padding: 10px; }
+    input, select, button { font-size: 16px; }
+    table th, table td { font-size: 14px; padding: 5px; }
+  }
+</style>
+</head>
+<body>
+<h2>Truck Checking Form</h2>
+<form id="truckForm">
+  Date: <input type="date" id="date" required><br>
+  Bay No:
+  <select id="bay" required>
+    <option value="">Select Bay</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+  </select><br>
+  Truck No: <input type="text" id="truck" required><br>
+  Compartment 1: <input type="number" id="c1"><br>
+  Compartment 2: <input type="number" id="c2"><br>
+  Compartment 3: <input type="number" id="c3"><br>
+  Compartment 4: <input type="number" id="c4"><br>
+  Compartment 5: <input type="number" id="c5"><br><br>
+  <button type="submit">Save</button>
+</form>
+
+<!-- New Show Data Button -->
+<button id="showDataBtn">Show Data</button>
+
+<h3>Saved Data</h3>
+<table id="dataTable">
+  <tr>
+    <th>Date</th><th>Bay No</th><th>Truck No</th><th>Check #</th>
+    <th>Compartment 1</th><th>Compartment 2</th>
+    <th>Compartment 3</th><th>Compartment 4</th><th>Compartment 5</th>
+  </tr>
+</table>
+
+<button id="exportBtn">Export to CSV</button>
+
+<script>
+const form = document.getElementById('truckForm');
+const table = document.getElementById('dataTable');
+const showBtn = document.getElementById('showDataBtn');
+
+let truckData = JSON.parse(localStorage.getItem('truckData') || '[]');
+
+function getCheckNumber(truckNo) {
+  return truckData.filter(r => r.truck === truckNo).length + 1;
+}
+
+function addRow(entry) {
+  const row = table.insertRow();
+  row.insertCell(0).innerText = entry.date;
+  row.insertCell(1).innerText = entry.bay;
+  row.insertCell(2).innerText = entry.truck;
+  row.insertCell(3).innerText = entry.check;
+
+  for (let i = 1; i <= 5; i++) {
+    const cell = row.insertCell(3 + i);
+    const val = parseFloat(entry['c'+i]) || 0;
+    cell.innerText = val;
+    if (val > 3 || val < -3) cell.classList.add('highlight-red');
+  }
+}
+
+// Save form data
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const truckNo = document.getElementById('truck').value.trim();
+  if (!truckNo) return alert("Truck No is required");
+
+  const entry = {
+    date: document.getElementById('date').value,
+    bay: document.getElementById('bay').value,
+    truck: truckNo,
+    check: getCheckNumber(truckNo),
+    c1: document.getElementById('c1').value,
+    c2: document.getElementById('c2').value,
+    c3: document.getElementById('c3').value,
+    c4: document.getElementById('c4').value,
+    c5: document.getElementById('c5').value,
+  };
+
+  truckData.push(entry);
+  localStorage.setItem('truckData', JSON.stringify(truckData));
+  form.reset();
+  alert("Data saved! Click 'Show Data' to view.");
+});
+
+// Show Data Button
+showBtn.addEventListener('click', function() {
+  // Clear existing table rows except header
+  while(table.rows.length > 1) table.deleteRow(1);
+  truckData.forEach(addRow);
+  table.style.display = "table";
+});
+
+// Export CSV
+document.getElementById('exportBtn').addEventListener('click', function(){
+  let csv = 'Date,Bay No,Truck No,Check,Compartment 1,Compartment 2,Compartment 3,Compartment 4,Compartment 5\n';
+  truckData.forEach(r => {
+    csv += `${r.date},${r.bay},${r.truck},${r.check},${r.c1},${r.c2},${r.c3},${r.c4},${r.c5}\n`;
+  });
+  const blob = new Blob([csv], {type: 'text/csv'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'truck_data.csv';
+  link.click();
+});
+
+// Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(() => console.log('Service Worker registered'));
+}
+</script>
+</body>
+</html>
